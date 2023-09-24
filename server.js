@@ -15,6 +15,7 @@ let filename = '';
 let numPages = 0;
 let pdfBytes = null;
 let pdfDoc = null;
+let error = '';
 
 app.use(express.static('public'));
 app.use(bodyParser.json());
@@ -49,34 +50,34 @@ app.get('/customise', (req, res) => {
 
 app.post('/upload', (req, res) => {
     upload(req, res, async (err) => {
-        if (err) {
-            res.send('Error uploading file.');
-            return;
-        }
-        
-        // Read the number of pages in the uploaded PDF
-        try {
+		if (err) {
+			// Handle the upload error
+			console.error(err);
+			return res.render('index', {message: "Failed to read the number of pages in the PDF."}); // Redirect with an error message, if necessary
+		}
+	
+		if (!req.file) {
+			// Handle the case when no file is uploaded
+			console.error("No PDF file uploaded");
+			return res.render('index', { message: "No PDF file uploaded"});
+		}
+	
+		// Rest of your code to process the uploaded PDF
+		try {
 			filename = req.file.originalname;
-            pdfBytes = await fs.promises.readFile(path.join(__dirname, filename));
-            pdfDoc = await PDFDocument.load(pdfBytes);
-            numPages = pdfDoc.getPageCount();
-            console.log(`File uploaded successfully. The PDF has ${numPages} pages.`);
-        } catch (pdfError) {
-            console.error(pdfError);
-            res.send('Failed to read the number of pages in the PDF.');
-        }
+			pdfBytes = await fs.promises.readFile(path.join(__dirname, filename));
+			pdfDoc = await PDFDocument.load(pdfBytes);
+			numPages = pdfDoc.getPageCount();
+			console.log(`File uploaded successfully. The PDF has ${numPages} pages.`);
+		} catch (pdfError) {
+			console.error(pdfError);
+			return res.render('/', { error: "Failed to read the number of pages in the PDF." });
+		}
 		res.redirect('/customise');
-    });
+	});	
 });
 
 app.post('/print', (req, res) => {
-	// let numCopies = req.body.numCopies;
-	// let colorMode = req.body.colorMode;
-	// let amount = 0;
-	// colorMode === 'monochrome' ? amount = numCopies * numPages * 3 : amount = numCopies * numPages * 5;
-	// console.log(`Printing ${numCopies} copies of ${filename} in ${colorMode} mode.`);
-	// console.log(`Amount to be paid: \u20B9${amount}`);
-
 	let msg = {
 			"operation-attributes-tag": {
 				"requesting-user-name": "InkNext",
@@ -95,6 +96,22 @@ app.post('/print', (req, res) => {
 		console.log(JSON.stringify(res));
 	});
 	console.log('File sent to printer.');
+
+
+	upload(req, res, async (err) => {
+        // Introduce a 10-second delay before deleting the file
+        setTimeout(async () => {
+            try {
+                // Delete the file
+				uploadedFilePath = path.join(__dirname, filename);
+                await fs.promises.unlink(uploadedFilePath);
+                console.log(`File deleted: ${uploadedFilePath}`);
+            } catch (deleteError) {
+                console.error(`Error deleting file: ${deleteError}`);
+            }
+        }, 5000); // 10000 milliseconds = 10 seconds
+	});
+	
 
 	res.redirect('/status');
 });

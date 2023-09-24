@@ -27,6 +27,15 @@
 	</style>
   </head>
 <body>
+	<!-- error messages -->
+	<%   if(typeof message != "undefined" && message) { %>
+        <div class="mt-5 mb-3">
+          <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong><%=  message  %></strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        </div> 
+      <% }    %>
 	<div class="upload-view">
 		<div class="container">
 			<form class="shadow-lg" id="upload-from" action='/upload' method='post' encType="multipart/form-data">
