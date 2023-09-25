@@ -85,7 +85,7 @@ app.post('/print', (req, res) => {
 				"document-format": "application/pdf"
 			},
 			"job-attributes-tag": {
-				"copies": 2,
+				"copies": 1,
 				"print-color-mode": "monochrome"
 			},
 			data: pdfBytes
